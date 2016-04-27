@@ -162,57 +162,6 @@ func newTexture(file string) (uint32, error) {
 	return texture, nil
 }
 
-var cubeVertices = []float32{
-	//  X, Y, Z, U, V
-	// Bottom
-	-1.0, -1.0, -1.0, 0.0, 0.0,
-	1.0, -1.0, -1.0, 1.0, 0.0,
-	-1.0, -1.0, 1.0, 0.0, 1.0,
-	1.0, -1.0, -1.0, 1.0, 0.0,
-	1.0, -1.0, 1.0, 1.0, 1.0,
-	-1.0, -1.0, 1.0, 0.0, 1.0,
-
-	// Top
-	-1.0, 1.0, -1.0, 0.0, 0.0,
-	-1.0, 1.0, 1.0, 0.0, 1.0,
-	1.0, 1.0, -1.0, 1.0, 0.0,
-	1.0, 1.0, -1.0, 1.0, 0.0,
-	-1.0, 1.0, 1.0, 0.0, 1.0,
-	1.0, 1.0, 1.0, 1.0, 1.0,
-
-	// Front
-	-1.0, -1.0, 1.0, 1.0, 0.0,
-	1.0, -1.0, 1.0, 0.0, 0.0,
-	-1.0, 1.0, 1.0, 1.0, 1.0,
-	1.0, -1.0, 1.0, 0.0, 0.0,
-	1.0, 1.0, 1.0, 0.0, 1.0,
-	-1.0, 1.0, 1.0, 1.0, 1.0,
-
-	// Back
-	-1.0, -1.0, -1.0, 0.0, 0.0,
-	-1.0, 1.0, -1.0, 0.0, 1.0,
-	1.0, -1.0, -1.0, 1.0, 0.0,
-	1.0, -1.0, -1.0, 1.0, 0.0,
-	-1.0, 1.0, -1.0, 0.0, 1.0,
-	1.0, 1.0, -1.0, 1.0, 1.0,
-
-	// Left
-	-1.0, -1.0, 1.0, 0.0, 1.0,
-	-1.0, 1.0, -1.0, 1.0, 0.0,
-	-1.0, -1.0, -1.0, 0.0, 0.0,
-	-1.0, -1.0, 1.0, 0.0, 1.0,
-	-1.0, 1.0, 1.0, 1.0, 1.0,
-	-1.0, 1.0, -1.0, 1.0, 0.0,
-
-	// Right
-	1.0, -1.0, 1.0, 1.0, 1.0,
-	1.0, -1.0, -1.0, 1.0, 0.0,
-	1.0, 1.0, -1.0, 0.0, 0.0,
-	1.0, -1.0, 1.0, 1.0, 1.0,
-	1.0, 1.0, -1.0, 0.0, 0.0,
-	1.0, 1.0, 1.0, 0.0, 1.0,
-}
-
 func main() {
 	err := glfw.Init()
 	if err != nil {
@@ -251,7 +200,7 @@ func main() {
 
 	gl.UseProgram(program)
 
-	projection := mgl32.Perspective(mgl32.DegToRad(45.0), float32(windowWidth)/windowHeight, 0.1, 10.0)
+	projection := mgl32.Perspective(mgl32.DegToRad(45.0), float32(windowWidth)/windowHeight, 0.1, 100.0)
 	projectionUniform := gl.GetUniformLocation(program, gl.Str("projection\x00"))
 	gl.UniformMatrix4fv(projectionUniform, 1, false, &projection[0])
 
@@ -259,9 +208,9 @@ func main() {
 	cameraUniform := gl.GetUniformLocation(program, gl.Str("camera\x00"))
 	gl.UniformMatrix4fv(cameraUniform, 1, false, &camera[0])
 
-	model := mgl32.Ident4()
-	modelUniform := gl.GetUniformLocation(program, gl.Str("model\x00"))
-	gl.UniformMatrix4fv(modelUniform, 1, false, &model[0])
+	// model := mgl32.Ident4()
+	// modelUniform := gl.GetUniformLocation(program, gl.Str("model\x00"))
+	// gl.UniformMatrix4fv(modelUniform, 1, false, &model[0])
 
 	textureUniform := gl.GetUniformLocation(program, gl.Str("tex\x00"))
 	gl.Uniform1i(textureUniform, 0)
@@ -303,6 +252,9 @@ func main() {
 	posx, posy, posz = 3.0, 3.0, 3.0
 	previousTime := glfw.GetTime()
 
+	v := CreateVox(0, 0, 0, program)
+	v1 := CreateVox(2, 2, 0, program)
+
 	for window.GetKey(glfw.KeyEscape) != glfw.Press && !window.ShouldClose() {
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
@@ -312,7 +264,7 @@ func main() {
 		previousTime = time
 
 		angle += elapsed
-		model = mgl32.HomogRotate3D(float32(angle), mgl32.Vec3{0, 1, 0})
+		// model = mgl32.HomogRotate3D(float32(angle), mgl32.Vec3{0, 1, 0})
 		// Move forward
 		if window.GetKey(glfw.KeyUp) == glfw.Press {
 			posy += elapsed * speed
@@ -333,19 +285,25 @@ func main() {
 			posx -= elapsed * speed
 			camera = mgl32.LookAtV(mgl32.Vec3{posx, posy, posz}, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0})
 		}
+
 		// Render
 		gl.UseProgram(program)
-		gl.UniformMatrix4fv(modelUniform, 1, false, &model[0])
+		//		gl.UniformMatrix4fv(modelUniform, 1, false, &model[0])
 		gl.UniformMatrix4fv(cameraUniform, 1, false, &camera[0])
-
-		gl.BindVertexArray(vao)
 
 		gl.ActiveTexture(gl.TEXTURE0)
 		gl.BindTexture(gl.TEXTURE_2D, texture)
 
 		gl.DrawArrays(gl.TRIANGLES, 0, 6*2*3)
 
+		// model = mgl32.Translate3D(2, 2, -2)
+
+		// gl.UniformMatrix4fv(modelUniform, 1, false, &model[0])
+
+		// gl.DrawArrays(gl.TRIANGLES, 0, 6*2*3)
 		// Maintenance
+		v.Render()
+		v1.Render()
 		window.SwapBuffers()
 		glfw.PollEvents()
 	}
